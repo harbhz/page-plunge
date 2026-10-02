@@ -7,7 +7,7 @@ sdk: gradio
 sdk_version: 5.45.0
 app_file: app.py
 pinned: false
-short_description: Recommends books by semantic similarity using NLP and vector search
+short_description: Semantic book recommendations with NLP and vector search
 ---
 
 # Page Plunge
