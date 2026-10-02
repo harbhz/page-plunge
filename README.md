@@ -12,21 +12,21 @@ short_description: Semantic book recommendations with NLP and vector search
 
 # Page Plunge
 
-Page Plunge is a semantic book recommender. Describe the kind of book you want, optionally choose a category and emotional tone, and the app searches an OpenAI-embedded Chroma vector database for recommendations.
+Page Plunge combines semantic recommendations with exact-title book search. Describe the kind of book you want, or switch to exact title mode to find a specific book and inspect its details.
 
 ## How It Works
 
-1. Book descriptions are embedded with OpenAI embeddings.
-2. Chroma retrieves the closest descriptions for a user's query.
-3. Results are filtered by category and sorted by the selected emotional tone.
-4. The Gradio interface displays book covers and short descriptions.
+1. Semantic mode uses OpenAI embeddings and Chroma to retrieve relevant descriptions.
+2. Category and emotional-tone controls refine semantic recommendations.
+3. Exact title mode checks the local dataset first and can optionally query HAPI Books through RapidAPI.
+4. Results include covers, authors, publication years, ratings, descriptions, and external links when available.
 
 The exploratory notebooks document the data cleaning, categorization, sentiment analysis, and vector-search work behind the app.
 
 ## Requirements
 
 - Python 3.10 or newer
-- An OpenAI API key
+- An OpenAI API key for semantic search
 - The checked-in book data files
 - A generated `chroma_db/` directory, unless one is already supplied by the deployment
 
@@ -47,6 +47,24 @@ Add your key to `.env`:
 ```dotenv
 OPENAI_API_KEY=your-openai-api-key
 ```
+
+For optional external exact-title lookup, add a RapidAPI key:
+
+```dotenv
+RAPIDAPI_KEY=your-rapidapi-key
+```
+
+The RapidAPI key is server-side only and is used with the HAPI Books API. Exact-title searches still work against the local dataset without it.
+
+### Get A HAPI Books API Key
+
+1. Create or sign in to an account at [RapidAPI](https://rapidapi.com/).
+2. Search the RapidAPI marketplace for **HAPI Books** and open the `hapi-books.p.rapidapi.com` API.
+3. Subscribe to a plan. The free plan, when available, has request limits set by RapidAPI.
+4. Open the API's **Endpoints** or **Code Snippets** page and copy the generated RapidAPI key.
+5. Store it locally as `RAPIDAPI_KEY` in `.env`, or add it as a secret environment variable on Render.
+
+Page Plunge calls the HAPI search endpoint only when exact-title mode has no local match. Do not use a `NEXT_PUBLIC_` variable or expose this key in browser code.
 
 If `chroma_db/` is not present, build it from the included data:
 
