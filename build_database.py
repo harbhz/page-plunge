@@ -1,19 +1,21 @@
-import os
+from pathlib import Path
+
 import pandas as pd
 from dotenv import load_dotenv
 from langchain_openai import OpenAIEmbeddings
-from langchain.schema import Document
 from langchain_chroma import Chroma
+from langchain_core.documents import Document
 
-load_dotenv()
+BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(BASE_DIR / ".env")
 
-PERSIST_DIRECTORY = "chroma_db"
+PERSIST_DIRECTORY = BASE_DIR / "chroma_db"
 
 
 def build_and_save_db():
     print("Loading book data from books_with_emotions.csv...")
     try:
-        books_df = pd.read_csv("books_with_emotions.csv")
+        books_df = pd.read_csv(BASE_DIR / "books_with_emotions.csv")
     except FileNotFoundError:
         print("Error: books_with_emotions.csv not found. Please ensure the file is in the directory.")
         return
@@ -34,7 +36,7 @@ def build_and_save_db():
     db = Chroma.from_documents(
         documents,
         OpenAIEmbeddings(),
-        persist_directory=PERSIST_DIRECTORY
+        persist_directory=str(PERSIST_DIRECTORY)
     )
 
     print(f"Database successfully created and saved to '{PERSIST_DIRECTORY}'.")

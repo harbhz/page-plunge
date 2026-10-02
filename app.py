@@ -1,36 +1,48 @@
+import os
+from pathlib import Path
+
 import pandas as pd
-import numpy as np
 from dotenv import load_dotenv
 from langchain_openai import OpenAIEmbeddings
 from langchain_chroma import Chroma
 import gradio as gr
 
-load_dotenv()
+BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(BASE_DIR / ".env")
 
-books = pd.read_csv("books_with_emotions.csv")
-books["large_thumbnail"] = books["thumbnail"] + "&fife=w800"
-books["large_thumbnail"] = np.where(
-    books["large_thumbnail"].isna(),
-    "cover-not-found.jpg",
-    books["large_thumbnail"],
-)
+books = pd.read_csv(BASE_DIR / "books_with_emotions.csv")
+books["large_thumbnail"] = books["thumbnail"].fillna(str(BASE_DIR / "cover-not-found.jpg"))
+books.loc[
+    books["large_thumbnail"].str.startswith("http", na=False), "large_thumbnail"
+] += "&fife=w800"
 
-PERSIST_DIRECTORY = "chroma_db"
-embedding_function = OpenAIEmbeddings()
-db_books = Chroma(
-    persist_directory=PERSIST_DIRECTORY,
-    embedding_function=embedding_function
-)
+PERSIST_DIRECTORY = BASE_DIR / "chroma_db"
+_db_books = None
+
+
+def get_database() -> Chroma:
+    global _db_books
+
+    if _db_books is None:
+        if not os.getenv("OPENAI_API_KEY"):
+            raise RuntimeError(
+                "OPENAI_API_KEY is not configured. Add it to a .env file or your environment."
+            )
+        _db_books = Chroma(
+            persist_directory=str(PERSIST_DIRECTORY),
+            embedding_function=OpenAIEmbeddings(),
+        )
+    return _db_books
 
 
 def retrieve_semantic_recommendations(
         query: str,
-        category: str = None,
-        tone: str = None,
+        category: str | None = None,
+        tone: str | None = None,
         initial_top_k: int = 50,
         final_top_k: int = 16,
 ) -> pd.DataFrame:
-    recs = db_books.similarity_search(query, k=initial_top_k)
+    recs = get_database().similarity_search(query, k=initial_top_k)
     books_list = []
 
     for rec in recs:
@@ -38,12 +50,10 @@ def retrieve_semantic_recommendations(
         if isbn_str.isdigit():
             books_list.append(int(isbn_str))
 
-    book_recs = books[books["isbn13"].isin(books_list)].head(initial_top_k)
+    book_recs = books[books["isbn13"].isin(books_list)]
 
-    if category != "All":
-        book_recs = book_recs[book_recs["simple_categories"] == category].head(final_top_k)
-    else:
-        book_recs = book_recs.head(final_top_k)
+    if category and category != "All":
+        book_recs = book_recs[book_recs["simple_categories"] == category]
 
     if tone == "Happy":
         book_recs = book_recs.sort_values(by="joy", ascending=False)
@@ -56,7 +66,7 @@ def retrieve_semantic_recommendations(
     elif tone == "Sad":
         book_recs = book_recs.sort_values(by="sadness", ascending=False)
 
-    return book_recs
+    return book_recs.head(final_top_k)
 
 
 def recommend_books(
@@ -73,7 +83,9 @@ def recommend_books(
             description = "No description available."
 
         truncated_desc_split = description.split()
-        truncated_description = " ".join(truncated_desc_split[:30]) + "..."
+        truncated_description = " ".join(truncated_desc_split[:30])
+        if len(truncated_desc_split) > 30:
+            truncated_description += "..."
 
         authors = row["authors"]
         if pd.notna(authors):
