@@ -62,6 +62,12 @@ python app.py
 
 Gradio will print the local URL in the terminal.
 
+## Render Deployment
+
+The repository includes a `render.yaml` blueprint for a free Render web service. Create a new Blueprint Instance from this repository, then add `OPENAI_API_KEY` as a secret environment variable in Render. Render uses `python app.py` as the start command and supplies the service port automatically.
+
+The committed `chroma_db/` directory is read at runtime; it is not rebuilt during deployment. The service may sleep on the free plan and take a moment to respond to its first request after waking.
+
 ## Data And Generated Files
 
 The CSV files and cover image are part of the sample dataset used by the application. `chroma_db/` is a generated vector index and is ignored for new commits; regenerate it with `build_database.py` when needed. Do not commit `.env`, API keys, virtual environments, IDE settings, or other generated files.

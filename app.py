@@ -125,4 +125,7 @@ with gr.Blocks(theme=gr.themes.Glass()) as dashboard:
                         outputs=output)
 
 if __name__ == "__main__":
-    dashboard.launch()
+    dashboard.launch(
+        server_name="0.0.0.0",
+        server_port=int(os.getenv("PORT", "7860")),
+    )
