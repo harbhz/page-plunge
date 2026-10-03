@@ -7,7 +7,7 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_chroma import Chroma
 import gradio as gr
 
-from book_search_service import search_local_title, search_rapidapi
+from book_search_service import format_year, search_local_title, search_rapidapi
 
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / ".env")
@@ -94,7 +94,7 @@ def _semantic_books(query: str, category: str, tone: str) -> list[dict]:
             {
                 "title": row["title"],
                 "authors": authors.replace(";", ", "),
-                "year": row["published_year"],
+                "year": format_year(row["published_year"]),
                 "rating": row["average_rating"],
                 "cover": row["large_thumbnail"],
                 "url": row.get("url", ""),
@@ -129,7 +129,11 @@ def search_books(query: str, mode: str, category: str, tone: str):
             except Exception as error:
                 return [], gr.Dropdown(choices=[], value=None), "", [], f"RapidAPI search failed: {error}"
             if not found:
-                status = "No title found. Add RAPIDAPI_KEY for external title lookup."
+                status = (
+                    "No title found locally or on HAPI Books."
+                    if os.getenv("RAPIDAPI_KEY")
+                    else "No title found. Add RAPIDAPI_KEY for external title lookup."
+                )
     else:
         found = _semantic_books(query, category, tone)
         status = "Semantic search using Chroma, category, and tone filters."

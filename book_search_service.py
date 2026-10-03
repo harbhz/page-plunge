@@ -1,3 +1,4 @@
+import math
 import os
 from typing import Any
 
@@ -13,6 +14,14 @@ def _cover_url(url: Any) -> str:
     return url.replace("._SX50_", "").replace("._SY75_", "")
 
 
+def format_year(value: Any) -> str:
+    if value is None or (isinstance(value, float) and math.isnan(value)) or value == "":
+        return "Unknown year"
+    if isinstance(value, float) and value.is_integer():
+        return str(int(value))
+    return str(value)
+
+
 def _normalise_book(book: dict[str, Any]) -> dict[str, Any]:
     authors = book.get("authors") or []
     if isinstance(authors, str):
@@ -21,11 +30,11 @@ def _normalise_book(book: dict[str, Any]) -> dict[str, Any]:
     return {
         "title": book.get("name") or book.get("title") or "Untitled",
         "authors": ", ".join(str(author) for author in authors) or "Unknown author",
-        "year": book.get("year") or book.get("published_year") or "Unknown year",
+        "year": format_year(book.get("year", book.get("published_year"))),
         "rating": book.get("rating") or book.get("average_rating") or "Not rated",
         "cover": _cover_url(book.get("cover") or book.get("thumbnail")),
         "url": book.get("url") or "",
-        "description": book.get("description") or "No description available.",
+        "description": book.get("description") or book.get("synopsis") or "No description available.",
         "source": book.get("source") or "Local dataset",
     }
 
@@ -45,7 +54,11 @@ def search_rapidapi(title: str) -> list[dict[str, Any]]:
     )
     response.raise_for_status()
     payload = response.json()
-    return [_normalise_book(book) for book in payload if isinstance(book, dict)]
+    return [
+        _normalise_book({**book, "source": "HAPI Books (RapidAPI)"})
+        for book in payload
+        if isinstance(book, dict)
+    ]
 
 
 def search_local_title(books, title: str) -> list[dict[str, Any]]:
