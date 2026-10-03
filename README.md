@@ -99,9 +99,10 @@ The CSV files and cover image are part of the sample dataset used by the applica
 | Path | Purpose |
 | --- | --- |
 | `app.py` | Gradio application and recommendation logic |
+| `book_search_service.py` | Exact-title search over the local dataset and HAPI Books |
 | `build_database.py` | Builds the Chroma vector database |
 | `*.csv` | Cleaned book and model output data |
-| `*_analysis.ipynb` | Data exploration and model experiments |
+| `data-exploration.ipynb`, `sentiment-analysis.ipynb`, `text-classification.ipynb` | Data exploration and model experiments |
 | `vector_search.ipynb` | Vector-search prototype |
 
 ## Validation
@@ -109,7 +110,7 @@ The CSV files and cover image are part of the sample dataset used by the applica
 Run the lightweight syntax check before opening a pull request:
 
 ```bash
-python -m compileall -q app.py build_database.py
+python -m compileall -q app.py build_database.py book_search_service.py
 ```
 
 ## License
