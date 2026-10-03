@@ -15,5 +15,5 @@ venv/
 .DS_Store
 .idea/
 
-# Generated vector database
-chroma_db/
+# Vector database is committed via Git LFS; only skip build state
+chroma_db/.build_progress

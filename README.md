@@ -14,6 +14,8 @@ short_description: Semantic book recommendations with NLP and vector search
 
 Page Plunge combines semantic recommendations with exact-title book search. Describe the kind of book you want, or switch to exact title mode to find a specific book and inspect its details.
 
+**Live demo:** [huggingface.co/spaces/harbhz/page-plunge](https://huggingface.co/spaces/harbhz/page-plunge)
+
 ## How It Works
 
 1. Semantic mode uses OpenAI embeddings and Chroma to retrieve relevant descriptions.
@@ -62,7 +64,7 @@ The RapidAPI key is server-side only and is used with the HAPI Books API. Exact-
 2. Search the RapidAPI marketplace for **HAPI Books** and open the `hapi-books.p.rapidapi.com` API.
 3. Subscribe to a plan. The free plan, when available, has request limits set by RapidAPI.
 4. Open the API's **Endpoints** or **Code Snippets** page and copy the generated RapidAPI key.
-5. Store it locally as `RAPIDAPI_KEY` in `.env`, or add it as a secret environment variable on Render.
+5. Store it locally as `RAPIDAPI_KEY` in `.env`, or add it as a secret in the Hugging Face Space settings.
 
 Page Plunge calls the HAPI search endpoint only when exact-title mode has no local match. Do not use a `NEXT_PUBLIC_` variable or expose this key in browser code.
 
@@ -80,15 +82,17 @@ python app.py
 
 Gradio will print the local URL in the terminal.
 
-## Render Deployment
+## Deployment
 
-The repository includes a `render.yaml` blueprint for a free Render web service. Create a new Blueprint Instance from this repository, then add `OPENAI_API_KEY` as a secret environment variable in Render. Render uses `python app.py` as the start command and supplies the service port automatically.
+The app is live on Hugging Face Spaces: [huggingface.co/spaces/harbhz/page-plunge](https://huggingface.co/spaces/harbhz/page-plunge)
 
-The committed `chroma_db/` directory is read at runtime; it is not rebuilt during deployment. The service may sleep on the free plan and take a moment to respond to its first request after waking.
+The Space uses the Gradio SDK configured in this README's front matter and installs `requirements.txt`. Add `OPENAI_API_KEY` and `RAPIDAPI_KEY` as secrets under the Space's **Settings → Variables and secrets**. Pushing to the Space's git remote triggers a rebuild.
+
+The committed `chroma_db/` directory is read at runtime; it is not rebuilt during deployment. A free Space sleeps after a period of inactivity and takes a moment to start on the next visit.
 
 ## Data And Generated Files
 
-The CSV files and cover image are part of the sample dataset used by the application. `chroma_db/` is a generated vector index and is ignored for new commits; regenerate it with `build_database.py` when needed. Do not commit `.env`, API keys, virtual environments, IDE settings, or other generated files.
+The CSV files and cover image are part of the sample dataset used by the application. `chroma_db/` is a generated vector index stored with Git LFS. After regenerating it with `build_database.py`, delete any collection folders the new database no longer references, then commit the whole directory so the deployment stays consistent. Do not commit `.env`, API keys, virtual environments, IDE settings, or other generated files.
 
 ## Repository Layout
 
